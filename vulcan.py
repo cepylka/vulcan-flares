@@ -124,7 +124,8 @@ data_atm =  make_atm.load_TPK(data_atm)
 make_atm.mol_diff(data_atm)
 
 # calculating the saturation pressure
-if vulcan_cfg.use_condense == True: make_atm.sp_sat(data_atm)
+if vulcan_cfg.use_condense:
+    make_atm.sp_sat(data_atm)
 
 # for reading rates
 rate = op.ReadRate()
@@ -132,9 +133,10 @@ rate = op.ReadRate()
 # read-in network and calculating forward rates
 data_var = rate.read_rate(data_var, data_atm)
 
-# for low-T rates e.g. Jupiter       
-if vulcan_cfg.use_lowT_limit_rates == True: data_var = rate.lim_lowT_rates(data_var, data_atm)
-    
+# for low-T rates e.g. Jupiter
+if vulcan_cfg.use_lowT_limit_rates:
+    data_var = rate.lim_lowT_rates(data_var, data_atm)
+
 # reversing rates
 data_var = rate.rev_rate(data_var, data_atm)
 # removing rates
@@ -153,9 +155,8 @@ data_atm = make_atm.f_mu_dz(data_var, data_atm, output)
 # specify the BC
 make_atm.BC_flux(data_atm)
 
-
 # ============== Execute VULCAN  ==============
-# time-steping in the while loop until conv() returns True or count > count_max 
+# time-steping in the while loop until conv() returns True or count > count_max
 
 # setting the numerical solver to the desinated one in vulcan_cfg
 solver_str = vulcan_cfg.ode_solver
