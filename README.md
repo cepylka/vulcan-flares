@@ -14,6 +14,7 @@
   - [Reading output files](#reading-output-files)
   - [Troubleshooting](#troubleshooting)
 - [Remarks](#remarks)
+- [Why fork](#why-fork)
 
 <!-- /MarkdownTOC -->
 
@@ -21,8 +22,8 @@
 
 - Shang-Min (Shami) Tsai
 
-Photochemical kinetics for exoplanetary atmospheres, a fast and easy-to-use python code.
-VULCAN is implemented with the equilibrium chemistry code [FastChem](https://github.com/exoclime/FastChem)  created by Daniel Kitzmann, Joachim Stock, to initialise a state in chemical equilibrium.
+Photochemical kinetics for exoplanetary atmospheres, a fast and easy-to-use Python code.
+VULCAN is implemented with the equilibrium chemistry code [FastChem](https://github.com/exoclime/FastChem) created by Daniel Kitzmann, Joachim Stock, to initialise a state in chemical equilibrium.
 
 The theory papers of VULCAN can be found here: [Tsai et al. 2021](https://arxiv.org/abs/2108.01790) (with photochemistry) and [Tsai et al. 2017](https://arxiv.org/abs/1607.00409) (without photochemistry).
 
@@ -210,8 +211,8 @@ $ xcode-select --install
 ## Remarks
 
 The project is financially support from the Center for Space and Habitability (CSH), the PlanetS NCCR framework and the Swiss-based MERAC Foundation.
-The Exoclime Simulation Platform ([ESP][1]) develops a set of open-source codes
-for research on exoplanets. The three parts of the ESP are:
+
+The Exoclime Simulation Platform ([ESP][1]) develops a set of open-source codes for research on exoplanets. The ESP consists of:
 
 - [HELIOS][2] radiative transfer and retrieval;
 - [THOR][3] atmospheric fluid dynamics;
@@ -225,3 +226,9 @@ for research on exoplanets. The three parts of the ESP are:
 [4]: https://github.com/exoclime/VULCAN
 [5]: https://github.com/exoclime/FastChem
 [6]: https://github.com/exoclime/HELA
+
+## Why fork
+
+This repository is a fork of the [original VULCAN](https://github.com/exoclime/VULCAN).
+
+The reason why it was forked instead of contributing to the original is that I needed to adjust the code to my particular goals/tasks, which are not very likely to of interest for a wider audience. Although I am not at all against sending my patches to the original repository, should those turn out to be useful.
