@@ -162,17 +162,17 @@ solver_str = vulcan_cfg.ode_solver
 solver = getattr(op, solver_str)()
 
 # Setting up for photo chemistry
-if vulcan_cfg.use_photo == True:
+if vulcan_cfg.use_photo:
     rate.make_bins_read_cross(data_var, data_atm)
     #rate.read_cross(data_var)
     make_atm.read_sflux(data_var, data_atm)
-    
+
     # computing the optical depth (tau), flux, and the photolisys rates (J) for the first time 
     solver.compute_tau(data_var, data_atm)
     solver.compute_flux(data_var, data_atm)
     solver.compute_J(data_var, data_atm)
     # they will be updated in op.Integration by the assigned frequence
-    
+
     # removing rates
     data_var = rate.remove_rate(data_var)
 

@@ -12,7 +12,10 @@ gibbs_text = 'thermo/gibbs_text.txt' # (all the nasa9 files must be placed in th
 cross_folder = 'thermo/photo_cross/'
 com_file = 'thermo/all_compose.txt'
 atm_file = 'atm/atm_HD189_Kzz.txt' # TP and Kzz (optional) file
-sflux_file = 'atm/stellar_flux/sflux-HD189_Moses11.txt' # sflux-HD189_B2020.txt This is the flux density at the stellar surface
+
+# the flux density at the stellar surface
+sflux_file = "./atm/stellar_flux/gj876_sflux_timesteps_60sec.pkl"
+
 top_BC_flux_file = 'atm/BC_top.txt' # the file for the top boundary conditions
 bot_BC_flux_file = 'atm/BC_bot.txt' # the file for the lower boundary conditions
 vul_ini = 'output/HD189-nominal.vul' # the file to initialize the abundances for ini_mix = 'vulcan_ini'

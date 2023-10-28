@@ -591,30 +591,44 @@ class Atm(object):
                 gi = 0.5*(data_atm.g + np.roll(data_atm.g,-1))
                 gi = gi[:-1]        
                 data_atm.vs[:,species.index(sp)] = -1. *(2./9*rho_p * r_p**2 * gi / dmu[1:])
-        
+
         # plot T-P profile
-        if vulcan_cfg.plot_TP == True: output.plot_TP(data_atm)
+        if vulcan_cfg.plot_TP:
+            output.plot_TP(data_atm)
         # print warning when T exceeds the valid range of Gibbs free energy (NASA polynomials)
         if np.any(np.logical_or(data_atm.Tco < 200, data_atm.Tco > 6000)): print ('Temperatures exceed the valid range of Gibbs free energy.\n')
-            
+
         return data_atm
-        
+
     def read_sflux(self, var, atm):
         '''reading in stellar stpactal flux at the stellar surface and converting it to the flux on the planet to the uniform grid using trapezoidal integral'''
-        atm.sflux_raw = np.genfromtxt(vulcan_cfg.sflux_file, dtype=float, skip_header=1, names = ['lambda','flux'])
-        
+
+        fluxAtThisTime = [
+            (lmbd, flx) for lmbd, flx in (
+                var.all_flux_data.iloc[var.crntTimeIdx].items()
+            )
+        ]
+        fluxAtThisTime_dtype = np.dtype("float64, float64")
+        atm.sflux_raw = np.array(fluxAtThisTime, dtype=fluxAtThisTime_dtype)
+        atm.sflux_raw.dtype.names = ["lambda", "flux"]
+
         # for values outside the boundary => fill_value = 0
         bins = var.bins
-        
+
         dbin1 = vulcan_cfg.dbin1
         dbin2 = vulcan_cfg.dbin2
-        
-        inter_sflux = interpolate.interp1d(atm.sflux_raw['lambda'], atm.sflux_raw['flux']* (vulcan_cfg.r_star*r_sun/(au*vulcan_cfg.orbit_radius) )**2, bounds_error=False, fill_value=0)
+
+        inter_sflux = interpolate.interp1d(
+            atm.sflux_raw["lambda"],
+            atm.sflux_raw["flux"] * (vulcan_cfg.r_star * r_sun / (au * vulcan_cfg.orbit_radius)) ** 2,
+            bounds_error=False,
+            fill_value=0
+        )
         for n, ld in enumerate(var.bins):
             var.sflux_top[n] = inter_sflux(ld) 
             if ld == vulcan_cfg.dbin_12trans: var.sflux_din12_indx = n
             # not converting to actinic flux yet *1/(hc/ld)
-        
+
         # Check for energy conservation
         # finding the index for the left & right pts that match var.bins in the raw data
         raw_flux = atm.sflux_raw['flux']* (vulcan_cfg.r_star*r_sun/(au*vulcan_cfg.orbit_radius) )**2

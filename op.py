@@ -797,49 +797,77 @@ class Integration(object):
         self.use_settling = vulcan_cfg.use_settling 
         
         # including photoionisation
-        if vulcan_cfg.use_photo == True: self.update_photo_frq = vulcan_cfg.ini_update_photo_frq
-        
-        if vulcan_cfg.use_condense == True:  
+        if vulcan_cfg.use_photo:
+            self.update_photo_frq = vulcan_cfg.ini_update_photo_frq
+
+        if vulcan_cfg.use_condense:
             self.non_gas_sp_index = [species.index(sp) for sp in self.non_gas_sp]
             self.condense_sp_index = [species.index(sp) for sp in vulcan_cfg.condense_sp]
-        
-        
+
     def __call__(self, var, atm, para, make_atm):
-        
+
         use_print_prog, use_live_plot = vulcan_cfg.use_print_prog, vulcan_cfg.use_live_plot
-        
-        while not self.stop(var, para, atm): # Looping until the stop condition is satisfied
-            
+
+        # looping until the stop condition is satisfied
+        while not self.stop(var, para, atm):
+
             var = self.backup(var)
-            
+
+            if len(var.all_flux_data.index) > var.crntTimeIdx + 1:
+                nextTimeValue = var.all_flux_data.index.values[
+                    var.crntTimeIdx + 1
+                ]
+                if var.t > nextTimeValue:
+                    print(
+                        " ".join((
+                            f"[DEBUG] var.t value ({var.t}) has exceeded",
+                            "the next time value from",
+                            f"fluxes file ({nextTimeValue})"
+                        ))
+                    )
+                    var.crntTimeIdx += 1
+
             # updating tau, flux, and the photolosys rate
             # swtiching to final_update_photo_frq
-            if vulcan_cfg.use_photo == True and var.longdy < vulcan_cfg.yconv_min*10. and var.longdydt < 1.e-6:  
+            if (
+                vulcan_cfg.use_photo
+                and var.longdy < vulcan_cfg.yconv_min * 10.
+                and var.longdydt < 1.e-6
+            ):
                 self.update_photo_frq = vulcan_cfg.final_update_photo_frq
-                if para.switch_final_photo_frq == False:
-                    print ('update_photo_frq changed to ' + str(vulcan_cfg.final_update_photo_frq) +'\n')
+                if not para.switch_final_photo_frq:
+                    print(
+                        f"update_photo_frq changed to {vulcan_cfg.final_update_photo_frq}\n"
+                    )
                     para.switch_final_photo_frq = True
-            
-            if vulcan_cfg.use_photo == True and para.count % self.update_photo_frq == 0:
+
+            if vulcan_cfg.use_photo and para.count % self.update_photo_frq == 0:
+                # updating changes in stellar flux
+                self.thisTime = 0
+                make_atm.read_sflux(var, atm)
+
                 self.odesolver.compute_tau(var, atm)
                 self.odesolver.compute_flux(var, atm)
                 self.odesolver.compute_J(var, atm)
-                if vulcan_cfg.use_ion == True: # photoionisation rate
+                if vulcan_cfg.use_ion:  # photoionisation rate
                     self.odesolver.compute_Jion(var, atm)
-                                    
+
             # integrating one step
             var, para = self.odesolver.one_step(var, atm, para)
-            
-            
+
             # Condensation (needs to be after solver.one_step)
-            if vulcan_cfg.use_condense == True and var.t >= vulcan_cfg.start_conden_time and para.fix_species_start == False:
-                # updating the condensation rates 
-                var = self.conden(var,atm)
-                
+            if (
+                vulcan_cfg.use_condense
+                and var.t >= vulcan_cfg.start_conden_time
+                and not para.fix_species_start
+            ):
+                # updating the condensation rates
+                var = self.conden(var, atm)
+
                 if vulcan_cfg.fix_species and var.t > vulcan_cfg.stop_conden_time:
-                    
-                    if para.fix_species_start == False: # switch to run for the first time
-                        
+
+                    if not para.fix_species_start:  # switch to run for the first time
+
                         para.fix_species_start = True
                         vulcan_cfg.rtol = vulcan_cfg.post_conden_rtol
                         print ("rtol changed to " + str(vulcan_cfg.rtol) + " after fixing the condensaed species.")
@@ -974,8 +1002,7 @@ class Integration(object):
             #print ("Test  " + sp + "{:>10.2e}".format(atm.Dzz[-1,species.index(sp)] *var.y[-1,species.index(sp)] /atm.Hp[-1]) )
             
         return atm
-    
-    
+
     # function calculating the change of y
     def f_dy(self, var, para): # y, y_prev, ymix, yconv, count, dt
         if para.count == 0: 

@@ -12,15 +12,16 @@ import vulcan_cfg
 from vulcan_cfg import nz
 from chem_funs import ni, nr, spec_list  # number of species and reactions in the network
 
-#from numba import jitclass
-#from numba import f8 # f8: float64 = double
+# from numba import jitclass
+# from numba import f8 # f8: float64 = double
 
-#spec_var = [('y',f8),('ymix',f8)  ]
+# spec_var = [('y',f8),('ymix',f8)  ]
 
-#@jitclass(spec_var)
+
+# @jitclass(spec_var)
 class Variables(object):
     """
-    store the essential variables for calculation  
+    store the essential variables for calculation
     """
     def __init__(self): # self means the created object instance
         self.k = {}  # rate coefficients: k[1] is the rate constant of R1 reaction at every level (same shape as Tco and pco)
@@ -38,7 +39,7 @@ class Variables(object):
         self.longdydt = 1. # the max change of dy/dt over a period of time 
         # (dn/dt in (11) in Tsai et al 2017)
         #self.slope_min = 0 # 
-        
+
         self.dy_time = [] # storing dy at each step 
         self.dydt_time = []
         self.atim_loss_time = []
@@ -47,13 +48,13 @@ class Variables(object):
         self.t_time = [] # storing the time  at each step 
         self.dt_time = [] # storing the time step  at each step 
         self.atom_loss_time = [] # storing the loss of atoms at each step
-        
+
         self.atom_ini = {}
         self.atom_sum = {}
         self.atom_loss = {}
         self.atom_loss_prev = {}
-        self.atom_conden = {}  
-        
+        self.atom_conden = {}
+
         self.Rf = {}  # reaction equation
         self.Rindx = {}
         self.a, self.n, self.E, self.a_inf, self.n_inf, self.E_inf,= [{} for i in range(6)]
@@ -63,21 +64,30 @@ class Variables(object):
         #if vulcan_cfg.use_ion == True:
         self.ion_rate_index, self.ion_branch, self.ion_wavelen, self.ion_br_ratio = {}, {}, {}, {}
         self.charge_list, self.ion_sp = [], set() # charge_list: list of species with non-zero charge; ion_sp: species subjected to photoionisation
-        
+
         self.kinf_fun = {}
         self.k_fun_new = {}
-        
+
         # the max change of the actinic flux (for convergence)
         # if photochemistry is off, the value remaines 0 for checking convergence
         self.aflux_change = 0.
-        
-        # The temporary wavelegth range (nm) given by the stellar flux
-        # It will later be adjusted in make_bins_read_cross in op.py considering all molecules the absorbe photons, taking the smaller range of the two 
-        sflux_data = np.genfromtxt(vulcan_cfg.sflux_file, dtype=float, skip_header=1, names = ['lambda', 'flux'])
-        
-        # setting the spectral bins based on the stellar spectrum, bun not shorter than 2nm ann not longer than 700 nm. This will further be ajusted in op.py while reading cross sections
-        self.def_bin_min = max(sflux_data['lambda'][0],2.)  
-        self.def_bin_max = min(sflux_data['lambda'][-1],700.)
+
+        self.all_flux_data = np.load(
+            vulcan_cfg.sflux_file,
+            allow_pickle=True,
+            mmap_mode="r"
+        )
+
+        self.crntTimeIdx = 0
+
+        self.def_bin_min = max(
+            self.all_flux_data.iloc[self.crntTimeIdx].index[0],
+            2.
+        )
+        self.def_bin_max = min(
+            self.all_flux_data.iloc[self.crntTimeIdx].index[-1],
+            700.
+        )
 
         # Define what variables to save in the output file!
         self.var_save = ['k','y','ymix','y_ini','t','dt','longdy','longdydt',\
@@ -89,24 +99,25 @@ class Variables(object):
         # 'ion_list' stores all the non-neutral species in build.atm whereas 'ion_sp' is for the species that actually have ionisation reactions in the network 
         self.var_evol_save = ['y_time','t_time']
         self.conden_re_list = []
-        
+
         # new for rading ratios
         self.threshold = {}
-        # list of avaliable temperatures of cross sections 
+        # list of avaliable temperatures of cross sections
         self.cross_T_sp_list = {}
-        
-        # TEST 
+
+        # TEST
         self.v_ratio = np.ones(nz)
-        
+
         ### ### ### ### ### ### ### ### ### ### ###
         # List the names variables defined in op here!
         ### ### ### ### ### ### ### ### ### ### ###
-        
+
         # Old stuff
         # self.yconv = 1.
         # self.yconv_prev = 1.
         # self.y_conden = np.zeros((nz, ni))  # to store the species removed by condensation      
         # photo data initiated in read_cross in op.py
+
 
 class AtmData(object):
     """
