@@ -231,4 +231,6 @@ The Exoclime Simulation Platform ([ESP][1]) develops a set of open-source codes 
 
 This repository is a fork of the [original VULCAN](https://github.com/exoclime/VULCAN).
 
-The reason why it was forked instead of contributing to the original is that I needed to adjust the code to my particular goals/tasks, which are not very likely to of interest for a wider audience. Although I am not at all against sending my patches to the original repository, should those turn out to be useful.
+The reason why it was forked instead of contributing to the original is that I needed to adjust the code to my particular goals/tasks, which are not very likely to be of interest for a wider audience. Although I am not at all against sending my patches to the original repository, should those turn out to be useful.
+
+Reporting bugs / requesting new functionality is disabled in in this repository, because most of the code originates in the upstream, and I won't be able to fix anything.
