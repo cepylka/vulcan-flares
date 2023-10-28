@@ -1,5 +1,12 @@
-__pycache__/
-plot/
+/__pycache__/
+/output/
+/plot/
 
-fastchem_vulcan/obj/
-fastchem_vulcan/fastchem
+/fastchem_vulcan/obj/
+/fastchem_vulcan/input/vulcan_TP/vulcan_TP.dat
+/fastchem_vulcan/input/element_abundances_vulcan.dat
+/fastchem_vulcan/output/chem_species.dat
+/fastchem_vulcan/output/monitor_output.dat
+/fastchem_vulcan/fastchem
+
+/chem_funs.py
