@@ -1,3 +1,5 @@
 __pycache__/
-fastchem_vulcan/obj/
 plot/
+
+fastchem_vulcan/obj/
+fastchem_vulcan/fastchem
