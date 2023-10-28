@@ -58,8 +58,8 @@ class Variables(object):
         self.Rf = {}  # reaction equation
         self.Rindx = {}
         self.a, self.n, self.E, self.a_inf, self.n_inf, self.E_inf,= [{} for i in range(6)]
-        self.k_fun, self.k_inf = [{} for i in range(2)] 
-        self.photo_sp = set()  
+        self.k_fun, self.k_inf = [{} for i in range(2)]
+        self.photo_sp = set()
         self.pho_rate_index, self.n_branch, self.wavelen = {}, {}, {}
         #if vulcan_cfg.use_ion == True:
         self.ion_rate_index, self.ion_branch, self.ion_wavelen, self.ion_br_ratio = {}, {}, {}, {}
@@ -72,22 +72,38 @@ class Variables(object):
         # if photochemistry is off, the value remaines 0 for checking convergence
         self.aflux_change = 0.
 
-        self.all_flux_data = np.load(
-            vulcan_cfg.sflux_file,
-            allow_pickle=True,
-            mmap_mode="r"
-        )
+        self.fluxWithTime = vulcan_cfg.fluxWithTime
 
-        self.crntTimeIdx = 0
+        if self.fluxWithTime:
+            self.all_flux_data = np.load(
+                vulcan_cfg.sflux_file,
+                allow_pickle=True,
+                mmap_mode="r"
+            )
 
-        self.def_bin_min = max(
-            self.all_flux_data.iloc[self.crntTimeIdx].index[0],
-            2.
-        )
-        self.def_bin_max = min(
-            self.all_flux_data.iloc[self.crntTimeIdx].index[-1],
-            700.
-        )
+            self.crntTimeIdx = 0
+
+            self.def_bin_min = max(
+                self.all_flux_data.iloc[self.crntTimeIdx].index[0],
+                2.
+            )
+            self.def_bin_max = min(
+                self.all_flux_data.iloc[self.crntTimeIdx].index[-1],
+                700.
+            )
+        else:
+            # The temporary wavelegth range (nm) given by the stellar flux
+            # It will later be adjusted in make_bins_read_cross in op.py considering all molecules the absorbe photons, taking the smaller range of the two
+            sflux_data = np.genfromtxt(
+                vulcan_cfg.sflux_file,
+                dtype=float,
+                skip_header=1,
+                names=["lambda", "flux"]
+            )
+
+            # setting the spectral bins based on the stellar spectrum, bun not shorter than 2nm ann not longer than 700 nm. This will further be ajusted in op.py while reading cross sections
+            self.def_bin_min = max(sflux_data["lambda"][0], 2.)
+            self.def_bin_max = min(sflux_data["lambda"][-1], 700.)
 
         # Define what variables to save in the output file!
         self.var_save = ['k','y','ymix','y_ini','t','dt','longdy','longdydt',\

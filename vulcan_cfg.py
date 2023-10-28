@@ -1,6 +1,6 @@
-# ============================================================================= 
-# Configuration file of VULCAN:  
-# ============================================================================= 
+# =============================================================================
+# Configuration file of VULCAN:
+# =============================================================================
 
 # ====== Setting up the elements included in the network ======
 atom_list = ['H', 'O', 'C', 'N']
@@ -8,32 +8,41 @@ atom_list = ['H', 'O', 'C', 'N']
 # input:
 network = 'thermo/NCHO_photo_network.txt'
 use_lowT_limit_rates = False
-gibbs_text = 'thermo/gibbs_text.txt' # (all the nasa9 files must be placed in the folder: thermo/NASA9/)
+# all the nasa9 files must be placed in the folder: thermo/NASA9/
+gibbs_text = 'thermo/gibbs_text.txt'
 cross_folder = 'thermo/photo_cross/'
 com_file = 'thermo/all_compose.txt'
-atm_file = 'atm/atm_HD189_Kzz.txt' # TP and Kzz (optional) file
+# TP and Kzz (optional) file
+atm_file = 'atm/atm_HD189_Kzz.txt'
 
 # the flux density at the stellar surface
 sflux_file = "./atm/stellar_flux/gj876_sflux_timesteps_60sec.pkl"
+# whether sflux_file contains fluxes just for one moment of time,
+# or is it a set of fluxes data with a time component,
+# like in ./atm/stellar_flux/gj876_sflux_timesteps_60sec.pkl
+fluxWithTime = True
 
-top_BC_flux_file = 'atm/BC_top.txt' # the file for the top boundary conditions
-bot_BC_flux_file = 'atm/BC_bot.txt' # the file for the lower boundary conditions
-vul_ini = 'output/HD189-nominal.vul' # the file to initialize the abundances for ini_mix = 'vulcan_ini'
+# the file for the top boundary conditions
+top_BC_flux_file = 'atm/BC_top.txt'
+# the file for the lower boundary conditions
+bot_BC_flux_file = 'atm/BC_bot.txt'
+# the file to initialize the abundances for ini_mix = 'vulcan_ini'
+vul_ini = 'output/HD189-nominal.vul'
 # output:
 output_dir = 'output/'
 plot_dir = 'plot/'
 movie_dir = 'plot/movie/'
-out_name =  'HD189.vul' # output file name
+out_name = 'HD189.vul'  # output file name
 
 # ====== Setting up the elemental abundance ======
-use_solar = False # True: using the solar abundance from Table 10. K.Lodders 2009; False: using the customized elemental abundance. 
+use_solar = False  # True: using the solar abundance from Table 10. K.Lodders 2009; False: using the customized elemental abundance.
 # customized elemental abundance (only read when use_solar = False)
-O_H = 6.0618E-4 #*(0.793)  
-C_H = 2.7761E-4  
+O_H = 6.0618E-4  #*(0.793)
+C_H = 2.7761E-4
 N_H = 8.1853E-5
 S_H = 1.3183E-5
 He_H = 0.09692
-ini_mix = 'EQ' # Options: 'EQ', 'const_mix', 'vulcan_ini', 'table' (for 'vulcan_ini, the T-P grids have to be exactly the same)
+ini_mix = 'EQ'  # Options: 'EQ', 'const_mix', 'vulcan_ini', 'table' (for 'vulcan_ini, the T-P grids have to be exactly the same)
 fastchem_met_scale = 0.1 # scaling factor for other elements in fastchem (e.g., if fastchem_met_scale = 0.1, other elements such as Si and Mg will take 0.1 solar values)
 
 # Initialsing uniform (constant with pressure) mixing ratios (only reads when ini_mix = const_mix)

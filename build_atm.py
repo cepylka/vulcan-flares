@@ -603,14 +603,22 @@ class Atm(object):
     def read_sflux(self, var, atm):
         '''reading in stellar stpactal flux at the stellar surface and converting it to the flux on the planet to the uniform grid using trapezoidal integral'''
 
-        fluxAtThisTime = [
-            (lmbd, flx) for lmbd, flx in (
-                var.all_flux_data.iloc[var.crntTimeIdx].items()
+        if var.fluxWithTime:
+            fluxAtThisTime = [
+                (lmbd, flx) for lmbd, flx in (
+                    var.all_flux_data.iloc[var.crntTimeIdx].items()
+                )
+            ]
+            fluxAtThisTime_dtype = np.dtype("float64, float64")
+            atm.sflux_raw = np.array(fluxAtThisTime, dtype=fluxAtThisTime_dtype)
+            atm.sflux_raw.dtype.names = ["lambda", "flux"]
+        else:
+            atm.sflux_raw = np.genfromtxt(
+                vulcan_cfg.sflux_file,
+                dtype=float,
+                skip_header=1,
+                names=["lambda", "flux"]
             )
-        ]
-        fluxAtThisTime_dtype = np.dtype("float64, float64")
-        atm.sflux_raw = np.array(fluxAtThisTime, dtype=fluxAtThisTime_dtype)
-        atm.sflux_raw.dtype.names = ["lambda", "flux"]
 
         # for values outside the boundary => fill_value = 0
         bins = var.bins

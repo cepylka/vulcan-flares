@@ -813,19 +813,20 @@ class Integration(object):
 
             var = self.backup(var)
 
-            if len(var.all_flux_data.index) > var.crntTimeIdx + 1:
-                nextTimeValue = var.all_flux_data.index.values[
-                    var.crntTimeIdx + 1
-                ]
-                if var.t > nextTimeValue:
-                    print(
-                        " ".join((
-                            f"[DEBUG] var.t value ({var.t}) has exceeded",
-                            "the next time value from",
-                            f"fluxes file ({nextTimeValue})"
-                        ))
-                    )
-                    var.crntTimeIdx += 1
+            if var.fluxWithTime:
+                if len(var.all_flux_data.index) > var.crntTimeIdx + 1:
+                    nextTimeValue = var.all_flux_data.index.values[
+                        var.crntTimeIdx + 1
+                    ]
+                    if var.t > nextTimeValue:
+                        # print(
+                        #     " ".join((
+                        #         f"[DEBUG] var.t value ({var.t}) has exceeded",
+                        #         "the next time value from",
+                        #         f"fluxes file ({nextTimeValue})"
+                        #     ))
+                        # )
+                        var.crntTimeIdx += 1
 
             # updating tau, flux, and the photolosys rate
             # swtiching to final_update_photo_frq
@@ -843,7 +844,6 @@ class Integration(object):
 
             if vulcan_cfg.use_photo and para.count % self.update_photo_frq == 0:
                 # updating changes in stellar flux
-                self.thisTime = 0
                 make_atm.read_sflux(var, atm)
 
                 self.odesolver.compute_tau(var, atm)
