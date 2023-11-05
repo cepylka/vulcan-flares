@@ -80,6 +80,8 @@ class Variables(object):
                 allow_pickle=True,
                 mmap_mode="r"
             )
+            self.all_flux_data_duplicates = self.all_flux_data.duplicated().index
+            print(f"[DEBUG] Indexes of duplicate rows in the fluxes file: {self.all_flux_data_duplicates}")
 
             self.crntTimeIdx = 0
 

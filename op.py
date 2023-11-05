@@ -843,8 +843,22 @@ class Integration(object):
                     para.switch_final_photo_frq = True
 
             if vulcan_cfg.use_photo and para.count % self.update_photo_frq == 0:
-                # updating changes in stellar flux
-                make_atm.read_sflux(var, atm)
+                if (
+                    var.fluxWithTime
+                    and
+                    var.crntTimeIdx not in var.all_flux_data_duplicates
+                ):
+                    # updating bin edges
+                    var.def_bin_min = max(
+                        var.all_flux_data.iloc[var.crntTimeIdx].index[0],
+                        2.
+                    )
+                    var.def_bin_max = min(
+                        var.all_flux_data.iloc[var.crntTimeIdx].index[-1],
+                        700.
+                    )
+                    # updating changes in stellar flux
+                    make_atm.read_sflux(var, atm)
 
                 self.odesolver.compute_tau(var, atm)
                 self.odesolver.compute_flux(var, atm)
