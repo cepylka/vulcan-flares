@@ -12,6 +12,8 @@ from phy_const import kb, Navo, r_sun, au
 from vulcan_cfg import nz
 import chem_funs
 from chem_funs import ni, nr  # number of species and reactions in the network
+from utils import readSfluxFromFile
+
 species = chem_funs.spec_list
 
 ### read in the basic chemistry data
@@ -613,11 +615,9 @@ class Atm(object):
             atm.sflux_raw = np.array(fluxAtThisTime, dtype=fluxAtThisTime_dtype)
             atm.sflux_raw.dtype.names = ["lambda", "flux"]
         else:
-            atm.sflux_raw = np.genfromtxt(
+            atm.sflux_raw = readSfluxFromFile(
                 vulcan_cfg.sflux_file,
-                dtype=float,
-                skip_header=1,
-                names=["lambda", "flux"]
+                vulcan_cfg.sflux_file_is_plaintext
             )
 
         # for values outside the boundary => fill_value = 0

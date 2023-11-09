@@ -16,11 +16,13 @@ com_file = 'thermo/all_compose.txt'
 atm_file = 'atm/atm_HD189_Kzz.txt'
 
 # the flux density at the stellar surface
-sflux_file = "./atm/stellar_flux/gj876_sflux_timesteps_60sec.pkl"
+sflux_file = "./atm/stellar_flux/gj876_sflux_timesteps_60sec.pkl" # "./atm/stellar_flux/sflux-HD189_Moses11.txt"
 # whether sflux_file contains fluxes just for one moment of time,
 # or is it a set of fluxes data with a time component,
 # like in ./atm/stellar_flux/gj876_sflux_timesteps_60sec.pkl
-fluxWithTime = True
+fluxWithTime = False
+# is it a plain-text file or a binary pickle
+sflux_file_is_plaintext = False
 
 # the file for the top boundary conditions
 top_BC_flux_file = 'atm/BC_top.txt'

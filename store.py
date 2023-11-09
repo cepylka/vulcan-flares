@@ -11,6 +11,7 @@ import scipy
 import vulcan_cfg
 from vulcan_cfg import nz
 from chem_funs import ni, nr, spec_list  # number of species and reactions in the network
+from utils import readSfluxFromFile
 
 # from numba import jitclass
 # from numba import f8 # f8: float64 = double
@@ -81,7 +82,7 @@ class Variables(object):
                 mmap_mode="r"
             )
             self.all_flux_data_duplicates = self.all_flux_data.duplicated().index
-            print(f"[DEBUG] Indexes of duplicate rows in the fluxes file: {self.all_flux_data_duplicates}")
+            #print(f"[DEBUG] Indexes of duplicate rows in the fluxes file: {self.all_flux_data_duplicates}")
 
             self.crntTimeIdx = 0
 
@@ -96,11 +97,9 @@ class Variables(object):
         else:
             # The temporary wavelegth range (nm) given by the stellar flux
             # It will later be adjusted in make_bins_read_cross in op.py considering all molecules the absorbe photons, taking the smaller range of the two
-            sflux_data = np.genfromtxt(
+            sflux_data = readSfluxFromFile(
                 vulcan_cfg.sflux_file,
-                dtype=float,
-                skip_header=1,
-                names=["lambda", "flux"]
+                vulcan_cfg.sflux_file_is_plaintext
             )
 
             # setting the spectral bins based on the stellar spectrum, bun not shorter than 2nm ann not longer than 700 nm. This will further be ajusted in op.py while reading cross sections
