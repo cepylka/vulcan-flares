@@ -16,9 +16,10 @@ import matplotlib.pyplot as plt
 import matplotlib.legend as lg
 import time, os, pickle
 import csv, ast
+import pandas
 # TEST numba
 # from numba import njit, jit
-
+from astropy import constants
 #from builtins import input
 #from collections import defaultdict
 # TODO :test the TODO buldle
@@ -465,7 +466,7 @@ class ReadRate(object):
     #                 sp = sp_list[0]
     #                 lists = sp_list[-1]
     #                 wavelen_yield = lists.partition(';')
-    #                 # wavelen_yield is tuple of string in wavelength seitch, ;, Q yield e.g. ('[165.]', ';', '[(1.,0),(0,1.)]')
+    #                 # wavelen_yield is tuple of seg in wavelength seitch, ;, Q yield e.g. ('[165.]', ';', '[(1.,0),(0,1.)]')
     #                 var.wavelen[sp] = ast.literal_eval(wavelen_yield[0].strip())
     #                 var.br_ratio[sp] = ast.literal_eval(wavelen_yield[-1].strip())
     #
@@ -842,13 +843,18 @@ class Integration(object):
                     )
                     para.switch_final_photo_frq = True
 
-            if vulcan_cfg.use_photo and para.count % self.update_photo_frq == 0:
+            if vulcan_cfg.use_photo and para.count % self.update_photo_frq == 0: # reset dt and introduce a new stellar spectra
                 if (
                     var.fluxWithTime
                     and
                     var.crntTimeIdx not in var.all_flux_data_duplicates
                 ):
+                    # reset dt
+                    # var.dt = vulcan_cfg.dttry
                     # updating bin edges
+                    if var.dt > vulcan_cfg.dt_min:
+                        var.dt = vulcan_cfg.dt_min # reset to dt min
+                        var.y[var.y<0] = 0. # clipping of negative values
                     var.def_bin_min = max(
                         var.all_flux_data.iloc[var.crntTimeIdx].index[0],
                         2.
@@ -947,6 +953,20 @@ class Integration(object):
             if vulcan_cfg.use_live_flux == True and vulcan_cfg.use_photo == True and para.count % vulcan_cfg.live_plot_frq ==0:
                 #plt.figure('flux')
                 self.output.plot_flux_update(var, atm, para)
+                # escape = pandas.read_pickle("./output/escape.pkl")
+                # escape1 = pandas.DataFrame(columns=["time","H","H2"])
+                # escape1.at[0,"time"] = var.t
+                # escape1.at[0,"time step"] = var.dt
+                # sp="H"
+                # fluxipixi = var.dflux_u[:,species.index(sp)]
+                # # print("Loosing H:",fluxipixi[-1])
+                # escape1.at[0,"H"] = fluxipixi[-1]
+                # sp1="H2"
+                # fluxipixi1 = var.dflux_u[:,species.index(sp1)]
+                # # print("Loosing H2:",fluxipixi1[-1])
+                # escape1.at[0,"H2"] = fluxipixi1[-1]
+                # escape = pandas.concat([escape,escape1])
+                # escape.to_pickle("./output/escape.pkl")
                 
             if use_live_plot == True and para.count % vulcan_cfg.live_plot_frq ==0:
                 #plt.figure('mix')
@@ -2903,7 +2923,7 @@ class Output(object):
         'C2':'C$_2$','C2H2':'C$_2$H$_2$','C2H3':'C$_2$H$_3$','C2H':'C$_2$H','CO':'CO','CO2':'CO$_2$','He':'He','O2':'O$_2$','CH3OH':'CH$_3$OH','C2H4':'C$_2$H$_4$','C2H5':'C$_2$H$_5$','C2H6':'C$_2$H$_6$','CH3O': 'CH$_3$O'\
         ,'CH2OH':'CH$_2$OH', 'NH3':'NH$_3$'}
         
-        plt.figure('live mixing ratios')
+        plt.figure('live mixing ratios') #uncoment for live plot
         plt.ion()
         color_index = 0
         for color_index, sp in enumerate(vulcan_cfg.plot_spec):
@@ -2935,7 +2955,7 @@ class Output(object):
         plt.xlim(1.E-20, 1.)
         plt.legend(frameon=0, prop={'size':14}, loc=3)
         plt.xlabel("Mixing Ratios")
-        plt.show(block=0)
+        plt.show(block=0) # uncomment for live plot
         plt.pause(0.001)
         if vulcan_cfg.use_save_movie == True: 
             plt.savefig( vulcan_cfg.movie_dir+str(para.pic_count)+'.png', dpi=200)
@@ -2946,9 +2966,7 @@ class Output(object):
         
         images = []
         plt.ion()
-        
-        # fig.add_subplot(121) fig.add_subplot(122)
-        
+
         line1, = plt.plot(np.sum(var.dflux_u,axis=1), atm.pico/1.e6, label='up flux')
         line2, = plt.plot(np.sum(var.dflux_d,axis=1), atm.pico/1.e6, label='down flux', ls='--', lw=1.2)
         line3, = plt.plot(np.sum(var.sflux,axis=1), atm.pico/1.e6, label='stellar flux', ls=':', lw=1.5)
@@ -2969,6 +2987,7 @@ class Output(object):
         if vulcan_cfg.use_flux_movie == True: plt.savefig( 'plot/movie/flux-'+str(para.count)+'.jpg')
         
         plt.clf()
+
         
     def plot_end(self, var, atm, para):
         
@@ -3006,17 +3025,51 @@ class Output(object):
             plt.close()
             
     def plot_evo(self, var, atm, plot_j=-1, dn=1):
-        
+        plot_j = -2
         plot_spec = vulcan_cfg.plot_spec
         plot_dir = vulcan_cfg.plot_dir
         plt.figure('evolution')
         
         ymix_time = np.array(var.y_time/atm.n_0[:,np.newaxis])
-        
+        y_time = np.array(var.y_time) # (2027, 150, 56)
+        # yymix_time = np.array(var.ymix_time)
+        # dtat = pandas.DataFrame(columns=vulcan_cfg.plot_spec)
+        # for i,sp in enumerate(vulcan_cfg.plot_spec):
+        #     listic = y_time[:,:,species.index(sp)]
+        #     speca = pandas.DataFrame(listic, columns=atm.pco, dtype = float) #columns = atm.pco,
+        #     speca.to_pickle(f"./output/y_time_{sp}.pkl")
         for i,sp in enumerate(vulcan_cfg.plot_spec):
             plt.plot(var.t_time[::dn], ymix_time[::dn,plot_j,species.index(sp)],c = plt.cm.rainbow(float(i)/len(plot_spec)),label=sp)
+            speca = pandas.DataFrame(ymix_time[::dn,:,species.index(sp)], columns=atm.pco,dtype = float) #columns = atm.pco,
+            speca["time"] = var.t_time[::dn]
+            speca.set_index('time',inplace=True)
+            speca.to_pickle(f"./output/y_time_{sp}.pkl")
 
-        plt.gca().set_xscale('log')       
+            # spec = ['H','H2']
+        sp1 ="H2"
+        speca2 = pandas.DataFrame(dtype = float)
+        speca2["time"] = var.t_time[:]
+        for i, sp in enumerate(vulcan_cfg.diff_esc):
+
+            dzz =  - atm.Dzz[-1,species.index(sp1)] * y_time[::dn,-1,species.index(sp)] #* (1/h - 1/h0)#(atm.ms[species.index(sp)]/(constants.N_A.value*constants.k_B.value*T))) # 1e3 2.01568 g mol-1 mol /6.022E23 mol-1 /1.380649e-23 kg-1⋅m-2⋅s2 K K-1
+             #columns = atm.pco,
+            # speca2[f"Dzz_c_{sp}"] = - atm.Dzz[-1,species.index(sp1)]
+            # speca2[f"Ndenn_{sp}"] = y_time[:,-1,species.index(sp)]
+            speca2[f"{sp}"] = dzz
+
+            speca2[f"spec_atmw{sp}"] = atm.ms[species.index(sp)]
+        speca2.set_index('time',inplace=True)
+        speca2.to_pickle(f"./output/TOAflux.pkl")
+        # speca1 = pandas.DataFrame(yymix_time, dtype = float) #columns = atm.pco,
+        # speca1["time"] = var.t_time[::dn]
+        # speca1.set_index('time',inplace=True)
+        # speca1.to_pickle(f"./output/ymix_time_{sp}.pkl")
+            # # dtat["time"] = var.t_time[::dn]
+            # # dtat[sp] = ymix_time[::dn,plot_j,species.index(sp)]
+        # for i,sp in enumerate(vulcan_cfg.plot_spec):
+        #     plt.plot(var.t_time[::dn], ymix_time[::dn,plot_j,species.index(sp)],c = plt.cm.rainbow(float(i)/len(plot_spec)),label=sp)
+        # dtat.to_pickle("./output/ymix_time.pkl")
+        # plt.gca().set_xscale('log')
         plt.gca().set_yscale('log') 
         plt.xlabel('time')
         plt.ylabel('mixing ratios')
@@ -3039,10 +3092,14 @@ class Output(object):
         plot_spec = vulcan_cfg.plot_spec
         plot_dir = vulcan_cfg.plot_dir
         plt.figure('evolution')
-    
+        dtat = pandas.DataFrame(columns=vulcan_cfg.plot_spec)
         for i,sp in enumerate(vulcan_cfg.plot_spec):
             plt.plot(var.t_time[::dn], ymix_time[::dn,plot_j,species.index(sp)],c = plt.cm.rainbow(float(i)/len(plot_spec)),label=sp)
-
+            dtat["time"] = var.t_time[::dn]
+            dtat[sp] = ymix_time[::dn,plot_j,species.index(sp)]
+        # for i,sp in enumerate(vulcan_cfg.plot_spec):
+        #     plt.plot(var.t_time[::dn], ymix_time[::dn,plot_j,species.index(sp)],c = plt.cm.rainbow(float(i)/len(plot_spec)),label=sp)
+        dtat.to_pickle("../output/ymix_time.pkl")
         plt.gca().set_xscale('log')       
         plt.gca().set_yscale('log') 
         plt.xlabel('time')

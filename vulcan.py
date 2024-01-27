@@ -59,6 +59,14 @@ import scipy
 import scipy.optimize as sop
 import time, timeit, sys
 import ast
+import pandas
+import warnings
+warnings.simplefilter(action="ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
+
+# Dataframe for abs escape H, H2
+# escape = pandas.DataFrame(columns=["time","H","H2"])
+# escape.to_pickle("./output/escape.pkl")
 
 # no arguments or not setting '-n' (no re-making chem_funs.py) option
 if len(sys.argv) < 2 or sys.argv[1] != '-n': 

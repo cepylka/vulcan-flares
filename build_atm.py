@@ -720,6 +720,15 @@ class Atm(object):
             if 'H2' in species:  atm.alpha[species.index('H2')] = -0.25
             if 'He' in species:  atm.alpha[species.index('He')] = -0.25
             if 'Ar' in species:  atm.alpha[species.index('Ar')] = 0.17
+
+        elif vulcan_cfg.atm_base == 'H2O': # molecular mass of water vapour atmo is 18.0 Gao et al. 2023
+            Dzz_gen = lambda T, n_tot, mi: 7.51E16*T**0.759/n_tot *( 18.0/mi*(mi+32)/48.04 )**0.5
+
+            # # thermal diffusion factor (>0 means (heavier) components diffuse toward colder rigions)
+            if 'H' in species: atm.alpha[species.index('H')] = -0.25
+            if 'H2' in species:  atm.alpha[species.index('H2')] = -0.25
+            if 'He' in species:  atm.alpha[species.index('He')] = -0.25
+            if 'Ar' in species:  atm.alpha[species.index('Ar')] = 0.17
             
         else: raise IOError ('\n Unknow atm_base!')
         
