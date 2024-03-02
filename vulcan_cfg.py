@@ -1,3 +1,40 @@
+import os
+
+# ---
+
+# sadly, it isn't trivial to implement proper CLI arguments in this project,
+# so we'll have to do that with environment variables
+
+vulcanRunsAreChainedVarName = "VULCAN_RUNS_ARE_CHAINED"
+vulcanRunOrdinalNumberVarName = "VULCAN_RUN_ORDINAL_NUMBER"
+
+# if this environment variable is set (to any value), then VULCAN runs are meant to be "chained"
+vulcanRunsAreChained = False
+if vulcanRunsAreChainedVarName in os.environ:
+    vulcanRunsAreChained = True
+
+vulcanRunOrdinalNumber = None
+if vulcanRunsAreChained:
+    # ordinal number of the current VULCAN run
+    if vulcanRunOrdinalNumberVarName in os.environ:
+        try:
+            vulcanRunOrdinalNumber = int(os.environ[vulcanRunOrdinalNumberVarName])
+        except ValueError:
+            raise SystemExit(
+                f"[ERROR] The value of {vulcanRunOrdinalNumberVarName} is not an integer"
+            )
+        # one more check, just in case
+        if not isinstance(vulcanRunOrdinalNumber, int):
+            raise SystemExit(
+                f"[ERROR] The value of {vulcanRunOrdinalNumberVarName} is not an integer"
+            )
+    else:
+        raise SystemExit(
+            f"[ERROR] Missing {vulcanRunOrdinalNumberVarName} environment variable"
+        )
+
+# ---
+
 # =============================================================================
 # Configuration file of VULCAN:
 # =============================================================================
@@ -25,7 +62,11 @@ com_file = 'thermo/all_compose.txt'
 atm_file = 'atm/atm_L98-59c_Kzz_h2o_1.00000.txt'
 
 # the flux density at the stellar surface
-sflux_file = "./atm/stellar_flux/ME1M03_sflux_timesteps_60secH02.pkl" # "./atm/stellar_flux/sflux-HD189_Moses11.txt"
+sflux_file = (
+    f"./atm/stellar_flux/ME1M03_sflux_timesteps_60secH-{vulcanRunOrdinalNumber}.pkl"
+    if vulcanRunsAreChained
+    else "./atm/stellar_flux/ME1M03_sflux_timesteps_60secH.pkl"
+)
 # whether sflux_file contains fluxes just for one moment of time,
 # or is it a set of fluxes data with a time component,
 # like in ./atm/stellar_flux/gj876_sflux_timesteps_60sec.pkl
@@ -38,12 +79,21 @@ top_BC_flux_file = 'atm/BC_top_GJ.txt'
 # the file for the lower boundary conditions
 bot_BC_flux_file = 'atm/BC_bot_mars.txt'
 # the file to initialize the abundances for ini_mix = 'vulcan_ini'
-vul_ini = 'output/First_runM1M03100H2O/ME1MS02.vul'
+vul_ini = (
+    f"./output/ME1MS02-{vulcanRunOrdinalNumber-1}.vul" # takes results of the previous run
+    if vulcanRunsAreChained
+    else "./output/ME1MS02.vul"
+)
 # output:
 output_dir = 'output/'
 plot_dir = 'plot/'
 movie_dir = 'plot/movie/'
-out_name = 'ME1MS02.vul'  # output file name
+# output file name
+out_name = (
+    f"ME1MS02-{vulcanRunOrdinalNumber}.vul"
+    if vulcanRunsAreChained
+    else "ME1MS02.vul"
+)
 
 # ====== Setting up the elemental abundance ======
 use_solar = True  # True: using the solar abundance from Table 10. K.Lodders 2009; False: using the customized elemental abundance.
@@ -58,7 +108,12 @@ He_H = 0.09692
 # N_H = 1.3e-3#1.97E-7#1.3e-3# * 1e-6 * 0.5#(1.299e-3 for solar atm)
 # S_H = 1.3183E-7
 # He_H = 0.09#4.92E-5#0.325 * 1e-6  * 0.5#(0.325 for solar atm)
-ini_mix = 'vulcan_ini'  # Options: 'EQ', 'const_mix', 'vulcan_ini', 'table' (for 'vulcan_ini, the T-P grids have to be exactly the same)
+
+# options: 'EQ', 'const_mix', 'vulcan_ini', 'table' (for 'vulcan_ini, the T-P grids have to be exactly the same)
+ini_mix = "EQ"
+if vulcanRunsAreChained:
+    ini_mix = "EQ" if vulcanRunOrdinalNumber == 1 else "vulcan_ini"
+
 fastchem_met_scale = 0.1 # scaling factor for other elements in fastchem (e.g., if fastchem_met_scale = 0.1, other elements such as Si and Mg will take 0.1 solar values)
 
 # Initialsing uniform (constant with pressure) mixing ratios (only reads when ini_mix = const_mix)
