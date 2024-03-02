@@ -658,7 +658,7 @@ class Atm(object):
         sum_bin += dbin2 * np.sum(var.sflux_top[var.sflux_din12_indx:])
         sum_bin -= dbin2 *0.5*(var.sflux_top[var.sflux_din12_indx]+var.sflux_top[-1])
          
-        print ("The stellar flux is interpolated onto uniform grid of " +str(vulcan_cfg.dbin1) + " (<" +str(vulcan_cfg.dbin_12trans)+" nm) and "+str(vulcan_cfg.dbin2)\
+        print ("At " +str(var.t) +" the stellar flux is interpolated onto uniform grid of " +str(vulcan_cfg.dbin1) + " (<" +str(vulcan_cfg.dbin_12trans)+" nm) and "+str(vulcan_cfg.dbin2)\
         + " (>="+str(vulcan_cfg.dbin_12trans)+" nm)" + " and conserving " + "{:.2f}".format(100* sum_bin/sum_orgin)+" %" + " energy." )
         #print (str(100* sum_old/sum_orgin)+" %" )
 

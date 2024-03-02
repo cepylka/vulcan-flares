@@ -819,7 +819,22 @@ class Integration(object):
                     nextTimeValue = var.all_flux_data.index.values[
                         var.crntTimeIdx + 1
                     ]
-                    if var.t > nextTimeValue:
+                    if (
+                        var.t > nextTimeValue
+                        # and
+                        # var.crntTimeIdx!=0
+                        ):
+
+                        var.def_bin_min = max(
+                            var.all_flux_data.iloc[var.crntTimeIdx].index[0],
+                            2.
+                        )
+                        var.def_bin_max = min(
+                            var.all_flux_data.iloc[var.crntTimeIdx].index[-1],
+                            700.
+                        )
+                        # updating changes in stellar flux
+                        make_atm.read_sflux(var, atm)
                         # print(
                         #     " ".join((
                         #         f"[DEBUG] var.t value ({var.t}) has exceeded",
@@ -828,6 +843,9 @@ class Integration(object):
                         #     ))
                         # )
                         var.crntTimeIdx += 1
+                        if var.dt > vulcan_cfg.dt_min:
+                            var.dt = 0.0001 #vulcan_cfg.dt_min*1e10 # reset to dt min for flux 0.0001 s
+                            var.y[var.y<0] = 0. # clipping of negative values
 
             # updating tau, flux, and the photolosys rate
             # swtiching to final_update_photo_frq
@@ -844,28 +862,15 @@ class Integration(object):
                     para.switch_final_photo_frq = True
 
             if vulcan_cfg.use_photo and para.count % self.update_photo_frq == 0: # reset dt and introduce a new stellar spectra
-                if (
-                    var.fluxWithTime
-                    and
-                    var.crntTimeIdx not in var.all_flux_data_duplicates
-                ):
+                # if (
+                #     var.fluxWithTime
+                #     and
+                #     var.crntTimeIdx not in var.all_flux_data_duplicates
+                # ):
                     # reset dt
                     # var.dt = vulcan_cfg.dttry
                     # updating bin edges
-                    if var.dt > vulcan_cfg.dt_min:
-                        var.dt = vulcan_cfg.dt_min # reset to dt min
-                        var.y[var.y<0] = 0. # clipping of negative values
-                    var.def_bin_min = max(
-                        var.all_flux_data.iloc[var.crntTimeIdx].index[0],
-                        2.
-                    )
-                    var.def_bin_max = min(
-                        var.all_flux_data.iloc[var.crntTimeIdx].index[-1],
-                        700.
-                    )
-                    # updating changes in stellar flux
-                    make_atm.read_sflux(var, atm)
-
+                
                 self.odesolver.compute_tau(var, atm)
                 self.odesolver.compute_flux(var, atm)
                 self.odesolver.compute_J(var, atm)
@@ -942,7 +947,7 @@ class Integration(object):
             var = self.f_dy(var, para)
             
             # save values of the current step
-            var, para = self.save_step(var, para)
+            var, para = self.save_step(var, para, atm)
             
             # adjusting the step-size
             var = self.odesolver.step_size(var, para)
@@ -1108,7 +1113,8 @@ class Integration(object):
             print ('Integration successful with ' + str(para.count) + ' steps and long dy, long dydt = ' + str(var.longdy) + ' ,' + str(var.longdydt) + '\nActinic flux change: ' + '{:.2E}'.format(var.aflux_change)) 
             self.output.print_end_msg(var, para)
             para.end_case = 1
-            return True
+            # return True
+            var.conver_time.append(var.t)
         elif var.t > vulcan_cfg.runtime:
             print ("After ------- %s seconds -------" % ( time.time()- para.start_time ) + ' s CPU time')
             print ('Integration not completed...\nMaximal allowed runtime exceeded ('+ \
@@ -1122,7 +1128,7 @@ class Integration(object):
             para.end_case = 3
             return True
     
-    def save_step(self, var, para):
+    def save_step(self, var, para, atm):
         '''
         save current values of y and add 1 to the counter
         '''
@@ -1134,7 +1140,23 @@ class Integration(object):
         var.y_time.append(var.y)
         #var.ymix_time.append(var.ymix.copy())
         var.t_time.append(var.t)
-    
+
+        ul = []
+        esdiffer = []
+
+        for sp in vulcan_cfg.diff_esc:
+            top_flux = 0.
+            top_flux = var.dflux_u[-1,species.index(sp)]
+            ul.append(top_flux)
+            esdiff = 0.
+            esdiff = - atm.Dzz[-1,species.index(sp)] * var.y[-1,species.index(sp)]
+            esdiffer.append(esdiff)
+
+        var.ul_loss_time.append(list(ul))
+         # sp="H"
+                # fluxipixi = var.dflux_u[:,species.index(sp)]
+                # # print("Loosing H:",fluxipixi[-1])
+        var.diff_esc_time.append(list(esdiffer))   
         # only used in PI_control
         # var.dy_time.append(var.y)
         # var.dydt_time.append(var.dydt)
@@ -2884,12 +2906,6 @@ class Output(object):
             as_nparray = np.array(getattr(var, key))
             setattr(var, key, as_nparray)
         
-        # plotting
-        if vulcan_cfg.use_plot_evo == True: 
-            self.plot_evo(var, atm)
-        if vulcan_cfg.use_plot_end == True:
-            self.plot_end(var, atm, para)
-        else: plt.close()
         
         # making the save dict
         var_save = {'species':species, 'nr':nr}
@@ -2911,6 +2927,12 @@ class Output(object):
                 # the protocol must be <= 2 for python 2.X
                 pickle.dump( {'variable': var_save, 'atm': vars(atm), 'parameter': vars(para) }, outfile, protocol=4)
                 # how to add  'config': vars(vulcan_cfg) ?
+        # plotting
+        if vulcan_cfg.use_plot_evo == True:
+            self.plot_evo(var, atm)
+        if vulcan_cfg.use_plot_end == True:
+            self.plot_end(var, atm, para)
+        else: plt.close()
         
             
     def plot_update(self, var, atm, para):
@@ -3031,35 +3053,35 @@ class Output(object):
         plt.figure('evolution')
         
         ymix_time = np.array(var.y_time/atm.n_0[:,np.newaxis])
-        y_time = np.array(var.y_time) # (2027, 150, 56)
-        # yymix_time = np.array(var.ymix_time)
-        # dtat = pandas.DataFrame(columns=vulcan_cfg.plot_spec)
-        # for i,sp in enumerate(vulcan_cfg.plot_spec):
-        #     listic = y_time[:,:,species.index(sp)]
-        #     speca = pandas.DataFrame(listic, columns=atm.pco, dtype = float) #columns = atm.pco,
-        #     speca.to_pickle(f"./output/y_time_{sp}.pkl")
+        # y_time = np.array(var.y_time) # (2027, 150, 56)
+        # # yymix_time = np.array(var.ymix_time)
+        # # dtat = pandas.DataFrame(columns=vulcan_cfg.plot_spec)
+        # # for i,sp in enumerate(vulcan_cfg.plot_spec):
+        # #     listic = y_time[:,:,species.index(sp)]
+        # #     speca = pandas.DataFrame(listic, columns=atm.pco, dtype = float) #columns = atm.pco,
+        # #     speca.to_pickle(f"./output/y_time_{sp}.pkl")
         for i,sp in enumerate(vulcan_cfg.plot_spec):
             plt.plot(var.t_time[::dn], ymix_time[::dn,plot_j,species.index(sp)],c = plt.cm.rainbow(float(i)/len(plot_spec)),label=sp)
-            speca = pandas.DataFrame(ymix_time[::dn,:,species.index(sp)], columns=atm.pco,dtype = float) #columns = atm.pco,
-            speca["time"] = var.t_time[::dn]
-            speca.set_index('time',inplace=True)
-            speca.to_pickle(f"./output/y_time_{sp}.pkl")
+        #     speca = pandas.DataFrame(ymix_time[::dn,:,species.index(sp)], columns=atm.pco,dtype = float) #columns = atm.pco,
+        #     speca["time"] = var.t_time[::dn]
+        #     speca.set_index('time',inplace=True)
+        #     speca.to_pickle(f"./output/y_time_{sp}.pkl")
 
-            # spec = ['H','H2']
-        sp1 ="H2"
-        speca2 = pandas.DataFrame(dtype = float)
-        speca2["time"] = var.t_time[:]
-        for i, sp in enumerate(vulcan_cfg.diff_esc):
+        #     # spec = ['H','H2']
+        # sp1 ="H2"
+        # speca2 = pandas.DataFrame(dtype = float)
+        # speca2["time"] = var.t_time[:]
+        # for i, sp in enumerate(vulcan_cfg.diff_esc):
 
-            dzz =  - atm.Dzz[-1,species.index(sp1)] * y_time[::dn,-1,species.index(sp)] #* (1/h - 1/h0)#(atm.ms[species.index(sp)]/(constants.N_A.value*constants.k_B.value*T))) # 1e3 2.01568 g mol-1 mol /6.022E23 mol-1 /1.380649e-23 kg-1⋅m-2⋅s2 K K-1
+            # dzz =  - atm.Dzz[-1,species.index(sp1)] * y_time[::dn,-1,species.index(sp)] #* (1/h - 1/h0)#(atm.ms[species.index(sp)]/(constants.N_A.value*constants.k_B.value*T))) # 1e3 2.01568 g mol-1 mol /6.022E23 mol-1 /1.380649e-23 kg-1⋅m-2⋅s2 K K-1
              #columns = atm.pco,
             # speca2[f"Dzz_c_{sp}"] = - atm.Dzz[-1,species.index(sp1)]
             # speca2[f"Ndenn_{sp}"] = y_time[:,-1,species.index(sp)]
-            speca2[f"{sp}"] = dzz
+            # speca2[f"{sp}"] = dzz
 
-            speca2[f"spec_atmw{sp}"] = atm.ms[species.index(sp)]
-        speca2.set_index('time',inplace=True)
-        speca2.to_pickle(f"./output/TOAflux.pkl")
+        #     speca2[f"spec_atmw{sp}"] = atm.ms[species.index(sp)]
+        # speca2.set_index('time',inplace=True)
+        # speca2.to_pickle(f"./output/TOAflux.pkl")
         # speca1 = pandas.DataFrame(yymix_time, dtype = float) #columns = atm.pco,
         # speca1["time"] = var.t_time[::dn]
         # speca1.set_index('time',inplace=True)

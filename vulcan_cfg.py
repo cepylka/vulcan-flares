@@ -1,7 +1,16 @@
 # =============================================================================
 # Configuration file of VULCAN:
 # =============================================================================
-
+#This is Mamonova et al. 2025 parameters for rumnning VULCAN
+# Stellar flux is variable and the light curve with flares is for 10 days
+# TP profiles prodused by HELIOS with FASTCHEM for abundansies inferred
+# for const_mix = {'H2':6.44000882e-09,'H2O':9.99999794e-01,'CH4': 5.55219897e-09, 'He':1.93839964e-07,'NH3':1.63705970e-09} #H2O%100 for 100% H2O atmo
+# therefore the run is for 'EQ' with corrected solar abundancies file: /fastchem_vulcan/input/solar_element_abundances.dat,
+# which needed to be updated for the next atmosphere in the grid
+#As we change the solar abundancies file, we choose use_solar = True
+# The initial frequency to update the actinic flux and optical depth is 50 steps
+# Atmospheric escape limited to diffusion and calculates for H,H2, H2O, He
+#This is NCNO full photonetwork
 # ====== Setting up the elements included in the network ======
 atom_list = ['H', 'O', 'C', 'N', 'He']
 # ====== Setting up paths and filenames for the input and output files  ======
@@ -13,10 +22,10 @@ gibbs_text = 'thermo/gibbs_text.txt'
 cross_folder = 'thermo/photo_cross/'
 com_file = 'thermo/all_compose.txt'
 # TP and Kzz (optional) file
-atm_file = 'atm/atm_grid_1M/atm_ME1MS02_Kzz_h2o_015849.txt'
+atm_file = 'atm/atm_L98-59c_Kzz_h2o_1.00000.txt'
 
 # the flux density at the stellar surface
-sflux_file = "./atm/stellar_flux/M02_sflux_timesteps_60secH01.pkl" # "./atm/stellar_flux/sflux-HD189_Moses11.txt"
+sflux_file = "./atm/stellar_flux/ME1M03_sflux_timesteps_60secH02.pkl" # "./atm/stellar_flux/sflux-HD189_Moses11.txt"
 # whether sflux_file contains fluxes just for one moment of time,
 # or is it a set of fluxes data with a time component,
 # like in ./atm/stellar_flux/gj876_sflux_timesteps_60sec.pkl
@@ -29,7 +38,7 @@ top_BC_flux_file = 'atm/BC_top_GJ.txt'
 # the file for the lower boundary conditions
 bot_BC_flux_file = 'atm/BC_bot_mars.txt'
 # the file to initialize the abundances for ini_mix = 'vulcan_ini'
-vul_ini = 'output/ME1MS02_60H2O/L98_59c.vul'
+vul_ini = 'output/First_runM1M03100H2O/ME1MS02.vul'
 # output:
 output_dir = 'output/'
 plot_dir = 'plot/'
@@ -37,7 +46,7 @@ movie_dir = 'plot/movie/'
 out_name = 'ME1MS02.vul'  # output file name
 
 # ====== Setting up the elemental abundance ======
-use_solar = False  # True: using the solar abundance from Table 10. K.Lodders 2009; False: using the customized elemental abundance.
+use_solar = True  # True: using the solar abundance from Table 10. K.Lodders 2009; False: using the customized elemental abundance.
 # customized elemental abundance (only read when use_solar = False)
 O_H = 0.13#0.21#0.21# 0.5  #
 C_H = 2.7761E-04
@@ -49,17 +58,19 @@ He_H = 0.09692
 # N_H = 1.3e-3#1.97E-7#1.3e-3# * 1e-6 * 0.5#(1.299e-3 for solar atm)
 # S_H = 1.3183E-7
 # He_H = 0.09#4.92E-5#0.325 * 1e-6  * 0.5#(0.325 for solar atm)
-ini_mix = 'const_mix'  # Options: 'EQ', 'const_mix', 'vulcan_ini', 'table' (for 'vulcan_ini, the T-P grids have to be exactly the same)
+ini_mix = 'vulcan_ini'  # Options: 'EQ', 'const_mix', 'vulcan_ini', 'table' (for 'vulcan_ini, the T-P grids have to be exactly the same)
 fastchem_met_scale = 0.1 # scaling factor for other elements in fastchem (e.g., if fastchem_met_scale = 0.1, other elements such as Si and Mg will take 0.1 solar values)
 
 # Initialsing uniform (constant with pressure) mixing ratios (only reads when ini_mix = const_mix)
 
-# const_mix = {'H2':6.44000882e-09,'H2O':9.99999794e-01,'CH4': 5.55219897e-09, 'He':1.93839964e-07,'NH3':1.63705970e-09} #H2O%100
+const_mix = {'H2':6.44000882e-09,'H2O':9.99999794e-01,'CH4': 5.55219897e-09, 'He':1.93839964e-07,'NH3':1.63705970e-09} #H2O%100
 # const_mix = {'H2':3.68707469e-01,'H2O':6.31098173e-01,'CH4': 5.55112841e-07, 'He':1.93802588e-04,'NH3':1.63674404e-07} #H2O%60
 # const_mix = {'H2':4.37900975e-01,'H2O':3.98112018e-01,'CH4': 6.65013658e-04, 'He':1.63321994e-01,'NH3':1.37111745e-04} #H2O%40
 # const_mix = {'H2':5.84832141e-01,'H2O':2.51180851e-01,'CH4': 6.65013658e-04, 'He':1.63321994e-01,'NH3':1.37111745e-04} #H2O%25
-const_mix = {'H2':6.77515279e-01,'H2O':1.58497714e-01,'CH4': 6.65013658e-04, 'He':1.63321994e-01,'NH3':1.37111745e-04} #H2O%25
-# const_mix = {'H2':7.36009679e-01,'H2O':1.00003313e-01,'CH4': 6.65013658e-04, 'He':1.63321994e-01,'NH3':1.37111745e-04} #H2O%25
+# const_mix = {'H2':6.77515279e-01,'H2O':1.58497714e-01,'CH4': 6.65013658e-04, 'He':1.63321994e-01,'NH3':1.37111745e-04} #H2O%15
+# const_mix = {'H2':7.36009679e-01,'H2O':1.00003313e-01,'CH4': 6.65013658e-04, 'He':1.63321994e-01,'NH3':1.37111745e-04} #H2O%10
+# const_mix = {'H2':7.72912074e-01,'H2O':6.31009181e-02,'CH4': 6.65013658e-04, 'He':1.63321994e-01,'NH3':1.37111745e-04} #H2O%6
+# const_mix = {'H2':7.72912074e-01,'H2O':6.31009181e-02,'CH4': 6.65013658e-04, 'He':1.63321994e-01,'NH3':1.37111745e-04} #H2O%6
 
 # const_mix = {'CH4':2.7761E-4*2, 'O2':4.807e-4, 'He':0.09691, 'N2':8.1853E-5, 'H2':1. -2.7761E-4*2*4/2}
 # const_mix = {'CH4':7.2E-4, 'O2':4.807e-4, 'He':0.16, 'N2':8.1853E-5, 'H2O':0.84 , 'H2':1.7E-3,'NH3':2.2E-4,'CO':1.0E-9}#'PH3':7.5E-7, 'H2S':3.7E-5,
@@ -86,7 +97,7 @@ const_mix = {'H2':6.77515279e-01,'H2O':1.58497714e-01,'CH4': 6.65013658e-04, 'He
 use_photo = True
 # astronomy input
 r_star = 0.303 # stellar radius in solar radius
-Rp = 0.0758*7.1492E9 # Planetary radius (cm) (for computing gravity) (7.1492E9 is R_jup)
+Rp = 0.0892141781*7.1492E9 # Planetary radius (cm) (for computing gravity) (7.1492E9 is R_jup)
 orbit_radius =0.0304 # planet-star distance in A.U.
 sl_angle = 58 /180.*3.14159 # the zenith angle of the star in degree (usually 58 deg for the dayside average)
 f_diurnal = 0.5 # to account for the diurnal average of solar flux (i.e. 0.5 for Earth; 1 for tidally-locked planets)
@@ -133,18 +144,21 @@ const_Kzz = 1.E10 # (cm^2/s) Only reads when use_Kzz = True and Kzz_prof = 'cons
 const_vz = 0 # (cm/s) Only reads when use_vz = True and vz_prof = 'const'
 
 # frequency for updating dz and dzi due to change of mu
-update_frq = 100 
+update_frq = 100
 
 # ====== Setting up the boundary conditions ======
 # Boundary Conditions:
 use_topflux = True
 use_botflux = False
 use_fix_sp_bot = {} # fixed mixing ratios at the lower boundary
-diff_esc = ["H","H2","H2O"] # species for diffusion-limit escape at TOA
-max_flux = 1e14  # upper limit for the diffusion-limit fluxes
+diff_esc = ["H","H2","H2O","He"] # species for diffusion-limit escape at TOA
+max_flux = 1e16  # upper limit for the diffusion-limit fluxes
 
 # ====== Reactions to be switched off  ======
 remove_list = [] # in pairs e.g. [1,2]
+
+# ====== Species escape list from the upper level  ======
+dflux_sp = ["H","H2","H2O","He"]
 
 # # == Condensation ======
 # use_condense = False
@@ -181,7 +195,7 @@ use_print_delta = False
 print_prog_num = 500  # print the progress every x steps 
 dttry = 1.E-10
 trun_min = 1e2
-runtime = 2.6e6#1.E22
+runtime = 865000.0#1.E22
 dt_min = 1.E-14
 dt_max = 40#runtime*1e-5
 dt_var_max = 2.
@@ -210,12 +224,12 @@ post_conden_rtol = 0.1 # switched to this value after fix_species_time
 plot_TP = False
 use_live_plot = False
 use_live_flux = False
-use_plot_end = True
-use_plot_evo = True
+use_plot_end = False
+use_plot_evo = False
 use_save_movie = False
 use_flux_movie = False
 plot_height = False
-use_PIL = True 
+use_PIL = False
 live_plot_frq = 1
 save_movie_rate = 5000 #live_plot_frq
 y_time_freq = 1  #  storing data for every 'y_time_freq' step
