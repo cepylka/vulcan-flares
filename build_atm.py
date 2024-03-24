@@ -5,7 +5,7 @@ from scipy import interpolate
 import scipy.optimize as sop
 import subprocess
 import pickle
-from shutil import copyfile 
+import shutil
 
 import vulcan_cfg
 from phy_const import kb, Navo, r_sun, au
@@ -83,9 +83,9 @@ class InitialAbun(object):
         tmp_str = ""
         solar_ele = 'fastchem_vulcan/input/solar_element_abundances.dat'
         if vulcan_cfg.use_ion == True:
-            copyfile('fastchem_vulcan/input/parameters_ion.dat', 'fastchem_vulcan/input/parameters.dat')
+            shutil.copyfile('fastchem_vulcan/input/parameters_ion.dat', 'fastchem_vulcan/input/parameters.dat')
         else:
-            copyfile('fastchem_vulcan/input/parameters_wo_ion.dat', 'fastchem_vulcan/input/parameters.dat')
+            shutil.copyfile('fastchem_vulcan/input/parameters_wo_ion.dat', 'fastchem_vulcan/input/parameters.dat')
             
         with open(solar_ele ,'r') as f:
             new_str = ""
@@ -161,10 +161,13 @@ class InitialAbun(object):
                 
                 if vulcan_cfg.use_ion == True:
                     if compo[compo_row.index(sp)]['e'] != 0: charge_list.append(sp)
-            
-            # remove the fc output
-            subprocess.call(["rm vulcan_EQ.dat"], shell=True, cwd='fastchem_vulcan/output/')
-                             
+
+            # move the FastChem output
+            shutil.move(
+                "./fastchem_vulcan/output/vulcan_EQ.dat",
+                f"./output/vulcan_EQ_{vulcan_cfg.simulationID}.dat"
+            )
+
         elif vulcan_cfg.ini_mix == 'vulcan_ini':
             print ("Initializing with compositions from the prvious run " + vulcan_cfg.vul_ini)
             with open(vulcan_cfg.vul_ini, 'rb') as handle:
@@ -662,8 +665,7 @@ class Atm(object):
         + " (>="+str(vulcan_cfg.dbin_12trans)+" nm)" + " and conserving " + "{:.2f}".format(100* sum_bin/sum_orgin)+" %" + " energy." )
         #print (str(100* sum_old/sum_orgin)+" %" )
 
-        
-    
+
     def mol_diff(self, atm):
         '''
         choosing the formulea of molecular diffusion for each species

@@ -74,15 +74,17 @@ fluxWithTime = True
 # is it a plain-text file or a binary pickle
 sflux_file_is_plaintext = False
 
+simulationID = "ME1MS02"
+
 # the file for the top boundary conditions
 top_BC_flux_file = 'atm/BC_top_GJ.txt'
 # the file for the lower boundary conditions
 bot_BC_flux_file = 'atm/BC_bot_mars.txt'
 # the file to initialize the abundances for ini_mix = 'vulcan_ini'
 vul_ini = (
-    f"./output/ME1MS02-{vulcanRunOrdinalNumber-1}.vul" # takes results of the previous run
+    f"./output/{simulationID}-{vulcanRunOrdinalNumber-1}.vul" # takes results of the previous run
     if vulcanRunsAreChained
-    else "./output/ME1MS02.vul"
+    else f"./output/{simulationID}.vul"
 )
 # output:
 output_dir = 'output/'
@@ -90,9 +92,9 @@ plot_dir = 'plot/'
 movie_dir = 'plot/movie/'
 # output file name
 out_name = (
-    f"ME1MS02-{vulcanRunOrdinalNumber}.vul"
+    f"{simulationID}-{vulcanRunOrdinalNumber}.vul"
     if vulcanRunsAreChained
-    else "ME1MS02.vul"
+    else f"{simulationID}.vul"
 )
 
 # ====== Setting up the elemental abundance ======
