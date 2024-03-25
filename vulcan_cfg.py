@@ -48,8 +48,26 @@ if vulcanRunsAreChained:
 # The initial frequency to update the actinic flux and optical depth is 50 steps
 # Atmospheric escape limited to diffusion and calculates for H,H2, H2O, He
 #This is NCNO full photonetwork
+
 # ====== Setting up the elements included in the network ======
 atom_list = ['H', 'O', 'C', 'N', 'He']
+
+# water percentage in atmosphere
+#
+# - 00001 is 0.01%
+# - 00010 is 0.10%
+# - 00015 is 0.15%
+# - 00100 is 1.00%
+# - 00150 is 1.50%
+# - 01000 is 10.00%
+# - 05000 is 50.00%
+# - 10000 is 100.00%
+#
+# and so on
+waterPercentage = "10000H2O"
+#
+simulationID = f"ME1MS03_{waterPercentage}"
+
 # ====== Setting up paths and filenames for the input and output files  ======
 # input:
 network = 'thermo/NCHO_full_photo_network.txt'
@@ -59,13 +77,35 @@ gibbs_text = 'thermo/gibbs_text.txt'
 cross_folder = 'thermo/photo_cross/'
 com_file = 'thermo/all_compose.txt'
 # TP and Kzz (optional) file
-atm_file = 'atm/atm_L98-59c_Kzz_h2o_1.00000.txt'
+atm_file = f"./atm/atm_{simulationID}_Kzz_{waterPercentage}.txt"
 
+# there might be a need to take stellar flux files in a custom order
+sfluxFileCustomOrderMap = {
+    1: 1,
+    2: 2,
+    3: 3,
+    4: 9,
+    5: 5,
+    6: 6,
+    7: 7,
+    8: 8,
+    9: 4
+}
+sfluxFileIsCustomOrder = True
+sfluxFileNumber = (
+    sfluxFileCustomOrderMap.get(vulcanRunOrdinalNumber)
+    if sfluxFileIsCustomOrder
+    else vulcanRunOrdinalNumber
+)
+if sfluxFileNumber is None:
+    raise SystemExit(
+        f"[ERROR] There is no mapped number for the VULCAN run ordinal number #{vulcanRunOrdinalNumber}"
+    )
 # the flux density at the stellar surface
 sflux_file = (
-    f"./atm/stellar_flux/ME1M03_sflux_timesteps_60secH-{vulcanRunOrdinalNumber}.pkl"
+    f"./atm/stellar_flux/ME1M03_sflux_timesteps_60secH-{sfluxFileNumber}.pkl"
     if vulcanRunsAreChained
-    else "./atm/stellar_flux/ME1M03_sflux_timesteps_60secH.pkl"
+    else "./atm/stellar_flux/ME1M03_sflux_timesteps_60secH-1.pkl"
 )
 # whether sflux_file contains fluxes just for one moment of time,
 # or is it a set of fluxes data with a time component,
@@ -74,15 +114,13 @@ fluxWithTime = True
 # is it a plain-text file or a binary pickle
 sflux_file_is_plaintext = False
 
-simulationID = "ME1MS02"
-
 # the file for the top boundary conditions
 top_BC_flux_file = 'atm/BC_top_GJ.txt'
 # the file for the lower boundary conditions
 bot_BC_flux_file = 'atm/BC_bot_mars.txt'
 # the file to initialize the abundances for ini_mix = 'vulcan_ini'
 vul_ini = (
-    f"./output/{simulationID}-{vulcanRunOrdinalNumber-1}.vul" # takes results of the previous run
+    f"./output/{simulationID}-{vulcanRunOrdinalNumber-1}.vul"  # takes results of the previous run
     if vulcanRunsAreChained
     else f"./output/{simulationID}.vul"
 )
@@ -99,6 +137,7 @@ out_name = (
 
 # ====== Setting up the elemental abundance ======
 use_solar = True  # True: using the solar abundance from Table 10. K.Lodders 2009; False: using the customized elemental abundance.
+solar_ele = f"./fastchem_vulcan/input/element_abundances_{waterPercentage}.dat"
 # customized elemental abundance (only read when use_solar = False)
 O_H = 0.13#0.21#0.21# 0.5  #
 C_H = 2.7761E-04

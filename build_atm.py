@@ -76,22 +76,26 @@ class InitialAbun(object):
         # somehow const_highT is not stable at high P...
         # elif vulcan_cfg.ini_mix == 'const_highT':
             # return np.array(sop.fsolve(self.abun_highT, self.ini_m))
-            
+
     def ini_fc(self, data_var, data_atm):
         # reading-in the default elemental abundances from Lodders 2009
         # depending on including ion or not (whether there is e- in the fastchem elemental abundance dat)
-        tmp_str = ""
-        solar_ele = 'fastchem_vulcan/input/solar_element_abundances.dat'
-        if vulcan_cfg.use_ion == True:
-            shutil.copyfile('fastchem_vulcan/input/parameters_ion.dat', 'fastchem_vulcan/input/parameters.dat')
+        if vulcan_cfg.use_ion:  # instead of copying files around, it should be just a variable for the file name
+            shutil.copyfile(
+                "fastchem_vulcan/input/parameters_ion.dat",
+                "fastchem_vulcan/input/parameters.dat"
+            )
         else:
-            shutil.copyfile('fastchem_vulcan/input/parameters_wo_ion.dat', 'fastchem_vulcan/input/parameters.dat')
-            
-        with open(solar_ele ,'r') as f:
+            shutil.copyfile(
+                "fastchem_vulcan/input/parameters_wo_ion.dat",
+                "fastchem_vulcan/input/parameters.dat"
+            )
+
+        with open(vulcan_cfg.solar_ele, "r") as f:
             new_str = ""
             ele_list = list(vulcan_cfg.atom_list)
             ele_list.remove('H')
-            
+
             fc_list = ['C', 'N', 'O', 'S', 'P', 'Si', 'Ti','V','Cl','K','Na','Mg','F','Ca','Fe']
             
             if vulcan_cfg.use_solar == True: 

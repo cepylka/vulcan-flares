@@ -11,4 +11,6 @@
 
 /chem_funs.py
 
+/atm/stellar_flux/*.pkl
+
 .DS_Store
