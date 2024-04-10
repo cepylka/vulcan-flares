@@ -80,18 +80,27 @@ com_file = 'thermo/all_compose.txt'
 atm_file = f"./atm/atm_{simulationID}_Kzz_{waterPercentage}.txt"
 
 # there might be a need to take stellar flux files in a custom order
+sfluxFileIsCustomOrder = False
+# so if you'll need to do that that, set `sfluxFileIsCustomOrder` to `True`,
+# and then map the keys to what values you actually want them to be,
+# for example:
+# sfluxFileCustomOrderMap = {
+#     4: 9,
+#     9: 4
+# }
+#
+# for missing keys it will take the ordinal
 sfluxFileCustomOrderMap = {
     1: 1,
     2: 2,
     3: 3,
-    4: 9,
+    4: 4,
     5: 5,
     6: 6,
     7: 7,
     8: 8,
-    9: 4
+    9: 9
 }
-sfluxFileIsCustomOrder = True
 sfluxFileNumber = (
     sfluxFileCustomOrderMap.get(vulcanRunOrdinalNumber)
     if sfluxFileIsCustomOrder
